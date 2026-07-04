@@ -1,0 +1,24 @@
+#  AMR Prediction Tool
+A machine learning web application for predicting antimicrobial resistance using **XGBoost** and **Streamlit**.
+** Disclaimer:** This application is a research prototype intended for educational and research purposes only. It is not intended for clinical use.
+##  Live Demo
+[AMR Prediction Tool](https://your-app-name.streamlit.app)
+##  Project Files
+* `app.py` – Streamlit web application
+* `train_model.py` – Model training script
+* `amr_dataset.csv` – Synthetic training dataset
+* `antibiotic_resistance_dataset.csv` – Processed dataset
+* `prediction_model.pkl` – Trained XGBoost model
+* `feature_encoders.pkl` – Feature encoders
+* `requirements.txt` – Python dependencies
+##  Run Locally
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+##  Developer
+Chand Javed
+Pharm‑D Student, Pakistan
+📧 chandjavedatrcb17n18@gmail.com
+## License
+This project is licensed under the MIT License.
