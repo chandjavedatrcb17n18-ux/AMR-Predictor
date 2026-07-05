@@ -87,6 +87,6 @@ st.markdown("---")
 st.markdown("""
 - **Project:** AMR Prediction Tool (Prototype)
 - **Developer:** Chand Javed
-- **GitHub:** [Link to your repository](https://github.com/yourusername/yourrepository)
-- **Contact:** [your.email@example.com](chandjavedatrcb17n18@gmail.com)
+- **GitHub:** [Link to repository](https://github.com/chandjavedatrcb17n18-ux/AMR-Predictor)
+- **Contact:** [chandjavedatrcb17n18@gmail.com](mailto:chandjavedatrcb17n18@gmail.com)
 """)
