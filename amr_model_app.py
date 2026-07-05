@@ -1,9 +1,13 @@
-import os
-os.system('pip install joblib')
+import subprocess
+import sys
+def install(package):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+install("joblib")
 import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
+import xgboost as xgb
 model = joblib.load('prediction_model.pkl')
 encoders = joblib.load('feature_encoders.pkl')
 st.title("🦠 AI‑Powered Antibiotic Resistance Predictor – Prototype for Antimicrobial Stewardship")
