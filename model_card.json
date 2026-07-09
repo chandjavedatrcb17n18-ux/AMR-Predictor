@@ -1,0 +1,39 @@
+{
+  "model_name": "AMR Predictor \u2014 XGBoost Classifier",
+  "version": "1.0",
+  "date": "2026-07-09",
+  "algorithm": "XGBoost Classifier",
+  "features": [
+    "age",
+    "gender",
+    "specimen",
+    "organism",
+    "antibiotic"
+  ],
+  "target": "resistant (0 = sensitive, 1 = resistant)",
+  "training_data": "Synthetic dataset (500 samples) based on published Pakistani antibiogram rates",
+  "preprocessing": "Label encoding for categorical variables, 70/30 train/test split",
+  "class_imbalance_handling": "scale_pos_weight",
+  "hyperparameter_tuning": "RandomizedSearchCV (n_estimators, max_depth, learning_rate)",
+  "performance_metrics": {
+    "accuracy": 0.6533,
+    "precision": 0.5,
+    "recall": 0.5962,
+    "f1_score": 0.5439,
+    "roc_auc": 0.6614,
+    "pr_auc": 0.4622
+  },
+  "limitations": [
+    "Trained on synthetic data \u2014 not validated on real clinical isolates",
+    "Limited to 4 organisms and 5 antibiotics",
+    "Not for clinical use without prospective validation",
+    "Model may not generalize to other geographic regions or hospital settings"
+  ],
+  "intended_use": "Research prototype for antimicrobial stewardship education and methodological demonstration",
+  "ethical_considerations": [
+    "No real patient data was used",
+    "Predictions are probabilistic and should not replace culture-based sensitivity testing",
+    "The tool includes explicit disclaimers against clinical use"
+  ],
+  "citation": "Chand Javed. AMR Prediction Tool. GitHub repository. 2025."
+}
