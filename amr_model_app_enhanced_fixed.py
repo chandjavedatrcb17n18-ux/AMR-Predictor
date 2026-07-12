@@ -5,10 +5,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import joblib
-
 model = joblib.load('prediction_model.pkl')
 encoders = joblib.load('feature_encoders.pkl')
-
 def prepare_features(organism, antibiotic, specimen, gender, age):
     input_dict = {
         'organism': organism,
@@ -24,18 +22,15 @@ def prepare_features(organism, antibiotic, specimen, gender, age):
     input_df['gender'] = encoders['gender'].transform(input_df['gender'])
     input_df = input_df[['age', 'gender', 'specimen', 'organism', 'antibiotic']]
     return input_df
-
 ORGANISMS = ['E. coli', 'K. pneumoniae', 'S. aureus', 'P. aeruginosa']
 ANTIBIOTICS = ['Ciprofloxacin', 'Ceftriaxone', 'Meropenem', 'Levofloxacin', 'Amikacin']
 SPECIMENS = ['urine', 'blood', 'sputum']
 GENDERS = ['M', 'F']
-
 st.set_page_config(
     page_title="AMR Predictor — Research Edition",
     page_icon="🦠",
     layout="wide",
 )
-
 st.markdown("""
 <style>
 :root {
@@ -46,36 +41,210 @@ st.markdown("""
     --clr-text-light: #FFFFFF;  
     --clr-brand-slate: #1E293B; 
     --clr-brand-sky: #0EA5E9;   
+    --clr-border: #E2E8F0;
+    --clr-status-success: #10B981;
+    --clr-status-warning: #F59E0B;
+    --clr-status-error: #EF4444;
 }
 
-/* Force visibility for all text elements */
-.stApp, .stApp p, .stApp span, .stApp label, .stApp div, .stApp li {
-    color: var(--clr-text-main) !important;
+/* Default text styling - inherits from Streamlit theme */
+.stApp {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Sidebar Specific Contrast */
+/* Sidebar Specific Styling */
+section[data-testid="stSidebar"] {
+    background-color: #F8FAFC;
+}
 section[data-testid="stSidebar"] label {
-    color: var(--clr-text-main) !important;
+    color: #0F172A !important;
     font-weight: 600 !important;
+    font-size: 0.9rem !important;
+}
+section[data-testid="stSidebar"] .stSelectbox label,
+section[data-testid="stSidebar"] .stNumberInput label {
+    color: #0F172A !important;
 }
 
 /* High-Contrast Accessible Hero Module */
 .app-header {
-    background: var(--clr-brand-slate) !important;
+    background: linear-gradient(135deg, #1E293B 0%, #334155 100%) !important;
     padding: 2.25rem !important;
     border-radius: 12px;
     margin-bottom: 1.5rem !important;
-    border-left: 6px solid var(--clr-brand-sky);
+    border-left: 6px solid #0EA5E9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-.app-header h1 { color: var(--clr-text-light) !important; }
-.app-header p { color: #CBD5E1 !important; }
+.app-header h1 { 
+    color: #FFFFFF !important; 
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+}
+.app-header p { 
+    color: #CBD5E1 !important; 
+    margin-top: 0.5rem;
+    font-size: 1rem;
+}
 
-/* Tabs readability */
+/* Hover effect for text elements */
+.app-header h1:hover {
+    transform: scale(1.02);
+    transition: transform 0.2s ease;
+}
+.app-header p:hover {
+    color: #E2E8F0 !important;
+    transition: color 0.2s ease;
+}
+
+/* Badge styling */
+.badge-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.badge {
+    background: #F1F5F9;
+    color: #1E293B !important;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    border: 1px solid #E2E8F0;
+    transition: all 0.3s ease;
+}
+.badge:hover {
+    background: #E2E8F0;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+}
+
+/* Card styling */
+.card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Risk chip styling */
+.risk-chip {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: all 0.3s ease;
+}
+.risk-low {
+    background: #D1FAE5;
+    color: #065F46 !important;
+    border: 2px solid #10B981;
+}
+.risk-moderate {
+    background: #FEF3C7;
+    color: #92400E !important;
+    border: 2px solid #F59E0B;
+}
+.risk-high {
+    background: #FEE2E2;
+    color: #991B1B !important;
+    border: 2px solid #EF4444;
+}
+.risk-chip:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabs readability and hover */
 .stTabs [data-baseweb="tab"] {
-    color: var(--clr-text-muted) !important;
+    color: #64748B !important;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+.stTabs [data-baseweb="tab"]:hover {
+    color: #0EA5E9 !important;
+    background: #F1F5F9;
+    border-radius: 8px;
 }
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
-    color: var(--clr-brand-sky) !important;
+    color: #0EA5E9 !important;
+    font-weight: 600;
+}
+
+/* Subheader hover effect */
+.stSubheader:hover {
+    color: #0EA5E9 !important;
+    transition: color 0.2s ease;
+}
+
+/* Metric cards hover */
+div[data-testid="stMetric"] {
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+div[data-testid="stMetric"]:hover {
+    background: #F8FAFC;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Button hover effects */
+.stButton button {
+    transition: all 0.3s ease !important;
+}
+.stButton button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Expander hover */
+.streamlit-expanderHeader:hover {
+    color: #0EA5E9 !important;
+}
+
+/* DataFrame hover */
+div[data-testid="stDataFrame"] td:hover {
+    background: #F1F5F9 !important;
+    transition: background 0.2s ease;
+}
+
+/* Download button hover */
+div[data-testid="stDownloadButton"] button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Sidebar button hover */
+section[data-testid="stSidebar"] .stButton button:hover {
+    background: #0EA5E9 !important;
+    color: white !important;
+}
+
+/* Information box hover */
+.stAlert:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+/* Text hover effects for general content */
+p:hover, span:hover, li:hover {
+    transition: opacity 0.2s ease;
+}
+
+/* Ensure text is visible on all backgrounds */
+.stMarkdown {
+    color: inherit;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -86,35 +255,33 @@ def gauge_svg(prob_percent: float, color_hex: str) -> str:
     circumference = np.pi * radius
     offset = circumference * (1 - prob_percent / 100)
     return f"""
-    <div style="text-align:center;margin:0;padding:0;width:100%;">
+    <div style="text-align:center;margin:0;padding:0;width:100%;transition: all 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
       <svg width="180" height="110" viewBox="0 0 180 110" style="max-width:100%;display:block;margin:0 auto;">
         <path d="M 20 90 A {radius} {radius} 0 0 1 160 90" fill="none"
-              stroke="var(--clr-border)" stroke-width="14" stroke-linecap="round"/>
+              stroke="#E2E8F0" stroke-width="14" stroke-linecap="round"/>
         <path d="M 20 90 A {radius} {radius} 0 0 1 160 90" fill="none"
               stroke="{color_hex}" stroke-width="14" stroke-linecap="round"
-              stroke-dasharray="{circumference}" stroke-dashoffset="{offset}"/>
+              stroke-dasharray="{circumference}" stroke-dashoffset="{offset}">
+          <animate attributeName="stroke-dashoffset" from="{circumference}" to="{offset}" dur="1s" fill="freeze"/>
+        </path>
         <text x="90" y="80" text-anchor="middle" font-family="IBM Plex Mono, monospace"
               font-size="26" font-weight="600" fill="{color_hex}">''' + f"{prob_percent:.1f}" + '''%</text>
         <text x="90" y="100" text-anchor="middle" font-family="Inter, sans-serif"
-              font-size="11" fill="var(--clr-text-muted)" font-weight="500">resistance probability</text>
+              font-size="11" fill="#64748B" font-weight="500">resistance probability</text>
       </svg>
     </div>
     """
-
 def _load_json(path):
     try:
         with open(path) as f:
             return json.load(f)
     except Exception:
         return None
-
 metrics = _load_json("metrics.json")
 model_card = _load_json("model_card.json")
 shap_importance = _load_json("shap_global_importance.json")
-
 if "history" not in st.session_state:
     st.session_state.history = []
-
 def risk_category(prob_percent: float):
     if prob_percent < 30:
         return "Low Risk", "green"
@@ -122,7 +289,6 @@ def risk_category(prob_percent: float):
         return "Moderate Risk", "orange"
     else:
         return "High Risk", "red"
-
 def clinical_interpretation(organism, antibiotic, prob_percent, alt_probs):
     label, _ = risk_category(prob_percent)
     best_alt = min(alt_probs, key=lambda x: x[1])
@@ -140,12 +306,10 @@ def clinical_interpretation(organism, antibiotic, prob_percent, alt_probs):
     else:
         text += "No clearly lower-risk alternative was identified among the antibiotics considered."
     return text
-
 @st.cache_resource(show_spinner=False)
 def get_explainer(_model):
     import shap
     return shap.TreeExplainer(_model)
-
 def local_shap_contributions(features_df):
     try:
         explainer = get_explainer(model)
@@ -160,7 +324,6 @@ def local_shap_contributions(features_df):
         return out
     except Exception:
         return None
-
 def build_pdf_report(patient, prob_percent, label, interpretation) -> bytes:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
@@ -211,14 +374,12 @@ def build_pdf_report(patient, prob_percent, label, interpretation) -> bytes:
     c.save()
     buf.seek(0)
     return buf.read()
-
 st.markdown("""
 <div class="app-header">
   <h1>🦠 AI-Powered Antibiotic Resistance Predictor</h1>
   <p>Research prototype for antimicrobial stewardship decision support · Educational &amp; research use only</p>
 </div>
 """, unsafe_allow_html=True)
-
 _version = "1.0.0"
 _n = "—"
 st.markdown(f"""
@@ -230,14 +391,12 @@ st.markdown(f"""
   <span class="badge">⚕️ Research Blueprint</span>
 </div>
 """, unsafe_allow_html=True)
-
 with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
     st.markdown(
         "This tool predicts the probability of antimicrobial resistance from "
         "patient/specimen/organism/antibiotic features, trained on a synthetic "
         "antibiogram-style dataset. **Not for clinical use.**"
     )
-
 with st.sidebar:
     st.header("Patient & Sample Information") 
     if st.button("🎲 Load Random Sample Patient", use_container_width=True):
@@ -266,11 +425,9 @@ with st.sidebar:
         "Educational/research prototype only. Not for clinical use. "
         "See 'About & Model Card' tab for full disclaimers."
     )
-
 tab_predict, tab_perf, tab_shap, tab_batch, tab_history, tab_about = st.tabs(
     ["🔬 Predict", "📊 Model Performance", "🧠 Explainability", "📁 Batch Prediction", "🕒 History", "📖 About & Model Card"]
 )
-
 with tab_predict:
     if predict_clicked:
         features = prepare_features(organism, antibiotic, specimen, gender, age)
@@ -278,7 +435,7 @@ with tab_predict:
         resistant_prob = proba[1]
         prob_percent = resistant_prob * 100
         label, color = risk_category(prob_percent)
-        color_hex = {"green": "var(--clr-status-success)", "orange": "var(--clr-status-warning)", "red": "var(--clr-status-error)"}[color]
+        color_hex = {"green": "#10B981", "orange": "#F59E0B", "red": "#EF4444"}[color]
         risk_class = {"green": "risk-low", "orange": "risk-moderate", "red": "risk-high"}[color]      
         col1, col2 = st.columns([1, 1])
         with col1:
@@ -300,13 +457,13 @@ with tab_predict:
                 p = model.predict_proba(feat)[0][1] * 100
                 probs.append((ab, p))
             chart_data = pd.DataFrame(probs, columns=["Antibiotic", "Resistance (%)"]).set_index("Antibiotic")
-            st.bar_chart(chart_data, color="var(--clr-brand-sky)")
-            st.markdown('</div>', unsafe_allow_html=True)          
+            st.bar_chart(chart_data, color="#0EA5E9")
+            st.markdown('</div>', unsafe_allow_html=True)         
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🩺 Clinical Interpretation Summary")
         interpretation = clinical_interpretation(organism, antibiotic, prob_percent, probs)
         st.info(interpretation)
-        st.markdown('</div>', unsafe_allow_html=True)    
+        st.markdown('</div>', unsafe_allow_html=True)     
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🧠 Local SHAP Contributions Framework")
         contrib = local_shap_contributions(features)
@@ -317,19 +474,19 @@ with tab_predict:
             )
         else:
             st.caption("SHAP explanation mapping unavailable.")
-        st.markdown('</div>', unsafe_allow_html=True)     
+        st.markdown('</div>', unsafe_allow_html=True)      
         st.session_state.history.append({
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "age": age, "gender": gender, "specimen": specimen,
             "organism": organism, "antibiotic": antibiotic,
             "resistance_probability_%": round(prob_percent, 1),
             "risk_category": label,
-        })        
+        })       
         st.subheader("📥 Export Pipeline Data")
         patient = {"Age": age, "Gender": gender, "Specimen": specimen,
                    "Organism": organism, "Antibiotic": antibiotic}
         csv_bytes = pd.DataFrame([{**patient, "Resistance_Probability_%": round(prob_percent, 1),
-                                   "Risk_Category": label}]).to_csv(index=False).encode()      
+                                    "Risk_Category": label}]).to_csv(index=False).encode()      
         colA, colB = st.columns(2)
         with colA:
             st.download_button("⬇️ Download as CSV Matrix", csv_bytes, file_name="amr_prediction.csv", mime="text/csv")
@@ -341,7 +498,6 @@ with tab_predict:
                 st.caption(f"PDF engine failed context initialization: {e}")
     else:
         st.info("Set patient/sample details in the sidebar and click **Predict Resistance** to begin.")
-
 with tab_perf:
     st.subheader("Held-out Test Performance Configuration")
     if metrics:
@@ -352,7 +508,7 @@ with tab_perf:
         c4.metric("F1-Score Metrics", f"{metrics['f1_score']:.3f}")
         if "brier_score" in metrics:
             c5.metric("Brier Score", f"{metrics['brier_score']:.3f}")      
-        st.markdown("---")        
+        st.markdown("---")       
         colA, colB, colC = st.columns(3)
         for col, img, cap in [
             (colA, "roc_curve.png", "ROC Curve Map"),
@@ -365,7 +521,6 @@ with tab_perf:
                 col.caption(f"{cap} asset missing from disk volume paths.")
     else:
         st.warning("Telemetry descriptor structure metrics.json not located.")
-
 with tab_shap:
     st.subheader("Global Explainer Feature Profiles (SHAP Engine)")
     colA, colB = st.columns(2)
@@ -377,7 +532,6 @@ with tab_shap:
         colB.image("shap_summary.png", caption="SHAP Positional Summary Distribution Diagram", use_container_width=True)
     except Exception:
         colB.caption("shap_summary.png visualization target absent from disk path storage.")
-
 with tab_batch:
     st.subheader("Cohort Optimization Bulk Operations Block")
     st.download_button(
@@ -398,18 +552,15 @@ with tab_batch:
             st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
         except Exception as e:
             st.error(f"Failed parsing uploaded batch context layers: {e}")
-
 with tab_history:
     st.subheader("Session Tracking Logs")
     if st.session_state.history:
         st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True, hide_index=True)
     else:
         st.info("No query tracking sequences logged within this context instance loop yet.")
-
 with tab_about:
     st.subheader("Model Card Specification Ledger")
     if model_card:
         st.json(model_card)
     else:
         st.markdown("No complete model card architecture profile template available on system paths.")
-# Note: Wrap your content inside div class="card" to apply the hover effects.
