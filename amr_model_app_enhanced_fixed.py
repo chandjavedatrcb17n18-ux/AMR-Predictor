@@ -320,7 +320,7 @@ st.markdown(f"""
   <span class="badge">⚕️ Research Blueprint</span>
 </div>
 """, unsafe_allow_html=True)
-with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
+    with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
 st.markdown(
     "This tool predicts the probability of antimicrobial resistance from "
     "patient/specimen/organism/antibiotic features, trained on a synthetic "
