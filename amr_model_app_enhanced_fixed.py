@@ -305,8 +305,12 @@ st.markdown("""
   <p>Research prototype for antimicrobial stewardship decision support · Educational &amp; research use only</p>
 </div>
 """, unsafe_allow_html=True)
-_version = model_card.get("version", "1.0.0") if model_card else "1.0.0"
-_n = model_card["training_data"]["n_samples"] if model_card and "training_data" in model_card and "n_samples" in model_card["training_data"] else "—"
+_version = "1.0.0"
+_n = "—"
+if model_card:
+    _version = model_card.get("version", "1.0.0")
+    if "training_data" in model_card:
+        _n = model_card["training_data"].get("n_samples", "—")
 st.markdown(f"""
 <div class="badge-row">
   <span class="badge">🧠 SHAP Explainable AI</span>
@@ -317,18 +321,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
-    if model_card:
-        st.markdown(f"**Model type:** `{model_card['model_type']}`  ·  **Version:** {model_card['version']}")
-        st.markdown(f"**Intended use:** {model_card['intended_use']}")
-        st.markdown("**Limitations:**")
-        for l in model_card["limitations"]:
-            st.markdown(f"- {l}")
-    else:
-        st.markdown(
-            "This tool predicts the probability of antimicrobial resistance from "
-            "patient/specimen/organism/antibiotic features, trained on a synthetic "
-            "antibiogram-style dataset. **Not for clinical use.**"
-        )
+st.markdown(
+    "This tool predicts the probability of antimicrobial resistance from "
+    "patient/specimen/organism/antibiotic features, trained on a synthetic "
+    "antibiogram-style dataset. **Not for clinical use.**"
+)
 with st.sidebar:
     st.header("Patient & Sample Information") 
     if st.button("🎲 Load Random Sample Patient", use_container_width=True):
