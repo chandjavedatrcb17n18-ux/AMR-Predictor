@@ -5,10 +5,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 import joblib
-
 model = joblib.load('prediction_model.pkl')
 encoders = joblib.load('feature_encoders.pkl')
-
 def prepare_features(organism, antibiotic, specimen, gender, age):
     input_dict = {
         'organism': organism,
@@ -24,18 +22,15 @@ def prepare_features(organism, antibiotic, specimen, gender, age):
     input_df['gender'] = encoders['gender'].transform(input_df['gender'])
     input_df = input_df[['age', 'gender', 'specimen', 'organism', 'antibiotic']]
     return input_df
-
 ORGANISMS = ['E. coli', 'K. pneumoniae', 'S. aureus', 'P. aeruginosa']
 ANTIBIOTICS = ['Ciprofloxacin', 'Ceftriaxone', 'Meropenem', 'Levofloxacin', 'Amikacin']
 SPECIMENS = ['urine', 'blood', 'sputum']
 GENDERS = ['M', 'F']
-
 st.set_page_config(
     page_title="AMR Predictor — Research Edition",
     page_icon="🦠",
     layout="wide",
 )
-
 st.markdown("""
 <style>
 :root {
@@ -181,7 +176,6 @@ div[data-testid="stMarkdownContainer"] h3 {
 }
 </style>
 """, unsafe_allow_html=True)
-
 def gauge_svg(prob_percent: float, color_hex: str) -> str:
     """Signature component: arc gauge framework rendering absolute probability values."""
     radius = 70
@@ -202,21 +196,17 @@ def gauge_svg(prob_percent: float, color_hex: str) -> str:
       </svg>
     </div>
     """
-
 def _load_json(path):
     try:
         with open(path) as f:
             return json.load(f)
     except Exception:
         return None
-
 metrics = _load_json("metrics.json")
 model_card = _load_json("model_card.json")
 shap_importance = _load_json("shap_global_importance.json")
-
 if "history" not in st.session_state:
     st.session_state.history = []
-
 def risk_category(prob_percent: float):
     if prob_percent < 30:
         return "Low Risk", "green"
@@ -224,7 +214,6 @@ def risk_category(prob_percent: float):
         return "Moderate Risk", "orange"
     else:
         return "High Risk", "red"
-
 def clinical_interpretation(organism, antibiotic, prob_percent, alt_probs):
     label, _ = risk_category(prob_percent)
     best_alt = min(alt_probs, key=lambda x: x[1])
@@ -242,12 +231,10 @@ def clinical_interpretation(organism, antibiotic, prob_percent, alt_probs):
     else:
         text += "No clearly lower-risk alternative was identified among the antibiotics considered."
     return text
-
 @st.cache_resource(show_spinner=False)
 def get_explainer(_model):
     import shap
     return shap.TreeExplainer(_model)
-
 def local_shap_contributions(features_df):
     try:
         explainer = get_explainer(model)
@@ -262,7 +249,6 @@ def local_shap_contributions(features_df):
         return out
     except Exception:
         return None
-
 def build_pdf_report(patient, prob_percent, label, interpretation) -> bytes:
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
@@ -313,14 +299,12 @@ def build_pdf_report(patient, prob_percent, label, interpretation) -> bytes:
     c.save()
     buf.seek(0)
     return buf.read()
-
 st.markdown("""
 <div class="app-header">
   <h1>🦠 AI-Powered Antibiotic Resistance Predictor</h1>
   <p>Research prototype for antimicrobial stewardship decision support · Educational &amp; research use only</p>
 </div>
 """, unsafe_allow_html=True)
-
 _version = "1.0.0"
 _n = "—"
 st.markdown(f"""
@@ -332,14 +316,12 @@ st.markdown(f"""
   <span class="badge">⚕️ Research Blueprint</span>
 </div>
 """, unsafe_allow_html=True)
-
 with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
     st.markdown(
         "This tool predicts the probability of antimicrobial resistance from "
         "patient/specimen/organism/antibiotic features, trained on a synthetic "
         "antibiogram-style dataset. **Not for clinical use.**"
     )
-
 with st.sidebar:
     st.header("Patient & Sample Information") 
     if st.button("🎲 Load Random Sample Patient", use_container_width=True):
@@ -352,7 +334,6 @@ with st.sidebar:
             "age": int(rng.integers(1, 91)),
         }
     sample = st.session_state.get("_sample", {})
-
     organism = st.selectbox("Organism (bacteria)", ORGANISMS,
                             index=ORGANISMS.index(sample["organism"]) if sample.get("organism") in ORGANISMS else 0)
     antibiotic = st.selectbox("Antibiotic", ANTIBIOTICS,
@@ -369,11 +350,9 @@ with st.sidebar:
         "Educational/research prototype only. Not for clinical use. "
         "See 'About & Model Card' tab for full disclaimers."
     )
-
 tab_predict, tab_perf, tab_shap, tab_batch, tab_history, tab_about = st.tabs(
     ["🔬 Predict", "📊 Model Performance", "🧠 Explainability", "📁 Batch Prediction", "🕒 History", "📖 About & Model Card"]
 )
-
 with tab_predict:
     if predict_clicked:
         features = prepare_features(organism, antibiotic, specimen, gender, age)
@@ -382,8 +361,7 @@ with tab_predict:
         prob_percent = resistant_prob * 100
         label, color = risk_category(prob_percent)
         color_hex = {"green": "var(--clr-status-success)", "orange": "var(--clr-status-warning)", "red": "var(--clr-status-error)"}[color]
-        risk_class = {"green": "risk-low", "orange": "risk-moderate", "red": "risk-high"}[color]
-        
+        risk_class = {"green": "risk-low", "orange": "risk-moderate", "red": "risk-high"}[color]      
         col1, col2 = st.columns([1, 1])
         with col1:
             st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -405,14 +383,12 @@ with tab_predict:
                 probs.append((ab, p))
             chart_data = pd.DataFrame(probs, columns=["Antibiotic", "Resistance (%)"]).set_index("Antibiotic")
             st.bar_chart(chart_data, color="var(--clr-brand-sky)")
-            st.markdown('</div>', unsafe_allow_html=True)
-            
+            st.markdown('</div>', unsafe_allow_html=True)         
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🩺 Clinical Interpretation Summary")
         interpretation = clinical_interpretation(organism, antibiotic, prob_percent, probs)
         st.info(interpretation)
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+        st.markdown('</div>', unsafe_allow_html=True)     
         st.markdown('<div class="card">', unsafe_allow_html=True)
         st.subheader("🧠 Local SHAP Contributions Framework")
         contrib = local_shap_contributions(features)
@@ -423,22 +399,19 @@ with tab_predict:
             )
         else:
             st.caption("SHAP explanation mapping unavailable.")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
+        st.markdown('</div>', unsafe_allow_html=True)      
         st.session_state.history.append({
             "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "age": age, "gender": gender, "specimen": specimen,
             "organism": organism, "antibiotic": antibiotic,
             "resistance_probability_%": round(prob_percent, 1),
             "risk_category": label,
-        })
-        
+        })       
         st.subheader("📥 Export Pipeline Data")
         patient = {"Age": age, "Gender": gender, "Specimen": specimen,
                    "Organism": organism, "Antibiotic": antibiotic}
         csv_bytes = pd.DataFrame([{**patient, "Resistance_Probability_%": round(prob_percent, 1),
-                                    "Risk_Category": label}]).to_csv(index=False).encode()
-        
+                                    "Risk_Category": label}]).to_csv(index=False).encode()      
         colA, colB = st.columns(2)
         with colA:
             st.download_button("⬇️ Download as CSV Matrix", csv_bytes, file_name="amr_prediction.csv", mime="text/csv")
@@ -450,7 +423,6 @@ with tab_predict:
                 st.caption(f"PDF engine failed context initialization: {e}")
     else:
         st.info("Set patient/sample details in the sidebar and click **Predict Resistance** to begin.")
-
 with tab_perf:
     st.subheader("Held-out Test Performance Configuration")
     if metrics:
@@ -461,8 +433,7 @@ with tab_perf:
         c4.metric("F1-Score Metrics", f"{metrics['f1_score']:.3f}")
         if "brier_score" in metrics:
             c5.metric("Brier Score", f"{metrics['brier_score']:.3f}")      
-        st.markdown("---")
-        
+        st.markdown("---")       
         colA, colB, colC = st.columns(3)
         for col, img, cap in [
             (colA, "roc_curve.png", "ROC Curve Map"),
@@ -475,7 +446,6 @@ with tab_perf:
                 col.caption(f"{cap} asset missing from disk volume paths.")
     else:
         st.warning("Telemetry descriptor structure metrics.json not located.")
-
 with tab_shap:
     st.subheader("Global Explainer Feature Profiles (SHAP Engine)")
     colA, colB = st.columns(2)
@@ -487,7 +457,6 @@ with tab_shap:
         colB.image("shap_summary.png", caption="SHAP Positional Summary Distribution Diagram", use_container_width=True)
     except Exception:
         colB.caption("shap_summary.png visualization target absent from disk path storage.")
-
 with tab_batch:
     st.subheader("Cohort Optimization Bulk Operations Block")
     st.download_button(
@@ -508,14 +477,12 @@ with tab_batch:
             st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
         except Exception as e:
             st.error(f"Failed parsing uploaded batch context layers: {e}")
-
 with tab_history:
     st.subheader("Session Tracking Logs")
     if st.session_state.history:
         st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True, hide_index=True)
     else:
         st.info("No query tracking sequences logged within this context instance loop yet.")
-
 with tab_about:
     st.subheader("Model Card Specification Ledger")
     if model_card:
