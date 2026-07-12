@@ -320,12 +320,12 @@ st.markdown(f"""
   <span class="badge">⚕️ Research Blueprint</span>
 </div>
 """, unsafe_allow_html=True)
-    with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
-st.markdown(
-    "This tool predicts the probability of antimicrobial resistance from "
-    "patient/specimen/organism/antibiotic features, trained on a synthetic "
-    "antibiogram-style dataset. **Not for clinical use.**"
-)
+   with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
+    st.markdown(
+        "This tool predicts the probability of antimicrobial resistance from "
+        "patient/specimen/organism/antibiotic features, trained on a synthetic "
+        "antibiogram-style dataset. **Not for clinical use.**"
+    )
 with st.sidebar:
     st.header("Patient & Sample Information") 
     if st.button("🎲 Load Random Sample Patient", use_container_width=True):
