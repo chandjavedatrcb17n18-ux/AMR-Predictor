@@ -46,12 +46,10 @@ st.markdown("""
     --clr-status-warning: #F59E0B;
     --clr-status-error: #EF4444;
 }
-
 /* Default text styling - inherits from Streamlit theme */
 .stApp {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
-
 /* Sidebar Specific Styling */
 section[data-testid="stSidebar"] {
     background-color: #F8FAFC;
@@ -65,7 +63,6 @@ section[data-testid="stSidebar"] .stSelectbox label,
 section[data-testid="stSidebar"] .stNumberInput label {
     color: #0F172A !important;
 }
-
 /* High-Contrast Accessible Hero Module */
 .app-header {
     background: linear-gradient(135deg, #1E293B 0%, #334155 100%) !important;
@@ -86,7 +83,6 @@ section[data-testid="stSidebar"] .stNumberInput label {
     margin-top: 0.5rem;
     font-size: 1rem;
 }
-
 /* Hover effect for text elements */
 .app-header h1:hover {
     transform: scale(1.02);
@@ -96,7 +92,6 @@ section[data-testid="stSidebar"] .stNumberInput label {
     color: #E2E8F0 !important;
     transition: color 0.2s ease;
 }
-
 /* Badge styling */
 .badge-row {
     display: flex;
@@ -120,7 +115,6 @@ section[data-testid="stSidebar"] .stNumberInput label {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     cursor: pointer;
 }
-
 /* Card styling */
 .card {
     background: #FFFFFF;
@@ -135,7 +129,6 @@ section[data-testid="stSidebar"] .stNumberInput label {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
     transform: translateY(-2px);
 }
-
 /* Risk chip styling */
 .risk-chip {
     display: inline-block;
@@ -164,7 +157,6 @@ section[data-testid="stSidebar"] .stNumberInput label {
     transform: scale(1.05);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
-
 /* Tabs readability and hover */
 .stTabs [data-baseweb="tab"] {
     color: #64748B !important;
@@ -180,13 +172,11 @@ section[data-testid="stSidebar"] .stNumberInput label {
     color: #0EA5E9 !important;
     font-weight: 600;
 }
-
 /* Subheader hover effect */
 .stSubheader:hover {
     color: #0EA5E9 !important;
     transition: color 0.2s ease;
 }
-
 /* Metric cards hover */
 div[data-testid="stMetric"] {
     transition: all 0.3s ease;
@@ -198,7 +188,6 @@ div[data-testid="stMetric"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
-
 /* Button hover effects */
 .stButton button {
     transition: all 0.3s ease !important;
@@ -207,48 +196,40 @@ div[data-testid="stMetric"]:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
-
 /* Expander hover */
 .streamlit-expanderHeader:hover {
     color: #0EA5E9 !important;
 }
-
 /* DataFrame hover */
 div[data-testid="stDataFrame"] td:hover {
     background: #F1F5F9 !important;
     transition: background 0.2s ease;
 }
-
 /* Download button hover */
 div[data-testid="stDownloadButton"] button:hover {
     transform: translateY(-2px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
-
 /* Sidebar button hover */
 section[data-testid="stSidebar"] .stButton button:hover {
     background: #0EA5E9 !important;
     color: white !important;
 }
-
 /* Information box hover */
 .stAlert:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transition: box-shadow 0.3s ease;
 }
-
 /* Text hover effects for general content */
 p:hover, span:hover, li:hover {
     transition: opacity 0.2s ease;
 }
-
 /* Ensure text is visible on all backgrounds */
 .stMarkdown {
     color: inherit;
 }
 </style>
 """, unsafe_allow_html=True)
-
 def gauge_svg(prob_percent: float, color_hex: str) -> str:
     """Signature component: arc gauge framework rendering absolute probability values."""
     radius = 70
