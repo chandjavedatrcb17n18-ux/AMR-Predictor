@@ -34,147 +34,46 @@ st.set_page_config(
 st.markdown("""
 <style>
 :root {
-    /* Semantic Layout Token Array */
     --clr-bg-app: #F8FAFC;
     --clr-bg-surface: #FFFFFF;
-    --clr-border: #E2E8F0;  
-    /* Typography Token Array */
-    --clr-text-main: #0F172A;
+    --clr-text-main: #0F172A; 
     --clr-text-muted: #475569;
-    --clr-text-light: #F8FAFC;  
-    /* Semantic Brand Colors (WCAG Compliant) */
-    --clr-brand-navy: #0F172A;
-    --clr-brand-slate: #1E293B;
+    --clr-text-light: #FFFFFF;  
+    --clr-brand-slate: #1E293B; 
     --clr-brand-sky: #0EA5E9;   
-    /* Status Validation Array */
-    --clr-status-success: #10B981;
-    --clr-status-warning: #F59E0B;
-    --clr-status-error: #EF4444;
-    /* Motion Parameter */
-    --anim-smooth: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
 }
-/* Base App Overhaul */
-.stApp {
-    background-color: var(--clr-bg-app) !important;
-    font-family: 'Inter', -apple-system, sans-serif !important;
-}
-/* Document Grid Boundaries */
-.main .block-container {
-    padding: 2.5rem 2rem !important;
-    max-width: 1320px !important;
-}
-/* Sidebar Custom Restyling */
-section[data-testid="stSidebar"] {
-    background-color: var(--clr-bg-surface) !important;
-    border-right: 1px solid var(--clr-border) !important;
-    padding-top: 2rem !important;
-}
-/* Scoped Semantic Headings */
-div[data-testid="stMarkdownContainer"] h1, 
-div[data-testid="stMarkdownContainer"] h2, 
-div[data-testid="stMarkdownContainer"] h3 {
+
+/* Force visibility for all text elements */
+.stApp, .stApp p, .stApp span, .stApp label, .stApp div, .stApp li {
     color: var(--clr-text-main) !important;
-    font-weight: 700 !important;
-    letter-spacing: -0.025em !important;
 }
+
+/* Sidebar Specific Contrast */
+section[data-testid="stSidebar"] label {
+    color: var(--clr-text-main) !important;
+    font-weight: 600 !important;
+}
+
 /* High-Contrast Accessible Hero Module */
 .app-header {
-    background: #808080 !important;
+    background: var(--clr-brand-slate) !important;
     padding: 2.25rem !important;
     border-radius: 12px;
     margin-bottom: 1.5rem !important;
-    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.08);
     border-left: 6px solid var(--clr-brand-sky);
-    width: 100% !important;
-    box-sizing: border-box !important;
 }
-.app-header h1 {
-    color: var(--clr-text-light) !important;
-    font-size: 1.85rem !important;
-    font-weight: 700 !important;
-    margin: 0 0 0.5rem 0 !important;
-}
-.app-header p {
-    color: #94A3B8 !important;
-    font-size: 1rem !important;
-    margin: 0 !important;
-}
-/* Metadata Row & Micro Pills */
-.badge-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-bottom: 1.75rem !important;
-}
-.badge {
-    font-family: 'IBM Plex Mono', monospace !important;
-    font-size: 0.75rem !important;
-    font-weight: 500 !important;
-    padding: 0.4rem 0.85rem !important;
-    border-radius: 9999px;
-    background-color: #E2E8F0 !important;
-    color: var(--clr-text-muted) !important;
-    border: 1px solid var(--clr-border) !important;
-    transition: var(--anim-smooth);
-}
-.badge:hover {
-    background-color: var(--clr-brand-slate) !important;
-    color: var(--clr-text-light) !important;
-    border-color: var(--clr-brand-slate) !important;
-}
-/* Refined Container Cards Layer */
-.card {
-    background-color: var(--clr-bg-surface) !important;
-    border: 1px solid var(--clr-border) !important;
-    border-radius: 12px;
-    padding: 1.75rem !important;
-    margin-bottom: 1.5rem !important;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.03) !important;
-    transition: var(--anim-smooth) !important;
-}
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 20px -3px rgba(15, 23, 42, 0.04), 0 4px 6px -4px rgba(15, 23, 42, 0.04) !important;
-    border-color: #CBD5E1 !important;
-}
-/* Accessible Risk Visualization Chips */
-.risk-chip {
-    display: inline-block;
-    font-family: 'IBM Plex Mono', monospace !important;
-    font-weight: 600;
-    font-size: 0.85rem;
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
-    color: var(--clr-text-light) !important;
-    margin-top: 0.5rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-.risk-low { background-color: var(--clr-status-success) !important; }
-.risk-moderate { background-color: var(--clr-status-warning) !important; color: #0F172A !important; }
-.risk-high { background-color: var(--clr-status-error) !important; }
-/* Interactive Tabs Component Upgrades */
-.stTabs [data-baseweb="tab-list"] {
-    gap: 0.5rem;
-    border-bottom: 2px solid var(--clr-border);
-}
+.app-header h1 { color: var(--clr-text-light) !important; }
+.app-header p { color: #CBD5E1 !important; }
+
+/* Tabs readability */
 .stTabs [data-baseweb="tab"] {
-    font-family: 'Inter', sans-serif !important;
-    font-weight: 500 !important;
     color: var(--clr-text-muted) !important;
-    padding: 0.6rem 1.2rem !important;
-    transition: var(--anim-smooth);
-}
-.stTabs [data-baseweb="tab"]:hover {
-    color: var(--clr-text-main) !important;
-    background-color: #F1F5F9 !important;
-    border-radius: 6px 6px 0 0;
 }
 .stTabs [data-baseweb="tab"][aria-selected="true"] {
     color: var(--clr-brand-sky) !important;
-    font-weight: 600 !important;
 }
 </style>
+""", unsafe_allow_html=True)
 """, unsafe_allow_html=True)
 def gauge_svg(prob_percent: float, color_hex: str) -> str:
     """Signature component: arc gauge framework rendering absolute probability values."""
