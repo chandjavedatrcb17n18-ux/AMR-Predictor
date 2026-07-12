@@ -325,9 +325,8 @@ _version = "1.0.0"
 _n = "—"
 if model_card:
     _version = model_card.get("version", "1.0.0")
-    if "training_data" in model_card:
+    if "training_data" in model_card and model_card["training_data"] is not None:
         _n = model_card["training_data"].get("n_samples", "—")
-
 st.markdown(f"""
 <div class="badge-row">
   <span class="badge">🧠 SHAP Explainable AI</span>
