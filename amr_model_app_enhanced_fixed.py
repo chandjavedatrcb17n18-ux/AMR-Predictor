@@ -89,7 +89,7 @@ def gauge_svg(prob_percent: float, color_hex: str) -> str:
               stroke="{color_hex}" stroke-width="14" stroke-linecap="round"
               stroke-dasharray="{circumference}" stroke-dashoffset="{offset}"/>
         <text x="90" y="80" text-anchor="middle" font-family="IBM Plex Mono, monospace"
-              font-size="26" font-weight="600" fill="{color_hex}">{prob_percent:.1f}%</text>
+              font-size="26" font-weight="600" fill="{color_hex}">''' + f"{prob_percent:.1f}" + '''%</text>
         <text x="90" y="100" text-anchor="middle" font-family="Inter, sans-serif"
               font-size="11" fill="var(--clr-text-muted)" font-weight="500">resistance probability</text>
       </svg>
