@@ -6,7 +6,6 @@ import pandas as pd
 import streamlit as st
 import joblib
 
-# Load models and encoders
 model = joblib.load('prediction_model.pkl')
 encoders = joblib.load('feature_encoders.pkl')
 
@@ -31,64 +30,386 @@ ANTIBIOTICS = ['Ciprofloxacin', 'Ceftriaxone', 'Meropenem', 'Levofloxacin', 'Ami
 SPECIMENS = ['urine', 'blood', 'sputum']
 GENDERS = ['M', 'F']
 
-st.set_page_config(page_title="AMR Predictor — Research Edition", page_icon="🦠", layout="wide")
+st.set_page_config(
+    page_title="AMR Predictor — Research Edition",
+    page_icon="🦠",
+    layout="wide",
+)
 
 st.markdown("""
 <style>
 :root {
-    --clr-bg-app: #F1F5F9;
-    --clr-bg-card: #FFFFFF;
-    --clr-text-main: #1E293B;
-    --clr-text-muted: #64748B;
-    --clr-accent: #0EA5E9;
+    --clr-bg-app: #F8FAFC;
+    --clr-bg-surface: #FFFFFF;
+    --clr-text-main: #0F172A; 
+    --clr-text-muted: #475569;
+    --clr-text-light: #FFFFFF;  
+    --clr-brand-slate: #1E293B; 
+    --clr-brand-sky: #0EA5E9;   
 }
 
-/* Ensure all app text is clearly visible */
-.stApp { background-color: var(--clr-bg-app); color: var(--clr-text-main); }
-h1, h2, h3, p, label, div { color: var(--clr-text-main) !important; }
+/* Force visibility for all text elements */
+.stApp, .stApp p, .stApp span, .stApp label, .stApp div, .stApp li {
+    color: var(--clr-text-main) !important;
+}
 
-/* Interactive Card Style */
-.card {
-    background: var(--clr-bg-card);
-    padding: 1.5rem;
+/* Sidebar Specific Contrast */
+section[data-testid="stSidebar"] label {
+    color: var(--clr-text-main) !important;
+    font-weight: 600 !important;
+}
+
+/* High-Contrast Accessible Hero Module */
+.app-header {
+    background: var(--clr-brand-slate) !important;
+    padding: 2.25rem !important;
     border-radius: 12px;
-    border: 1px solid #E2E8F0;
-    transition: all 0.3s ease;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem !important;
+    border-left: 6px solid var(--clr-brand-sky);
 }
-.card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    border-color: var(--clr-accent);
+.app-header h1 { color: var(--clr-text-light) !important; }
+.app-header p { color: #CBD5E1 !important; }
+
+/* Tabs readability */
+.stTabs [data-baseweb="tab"] {
+    color: var(--clr-text-muted) !important;
 }
-
-/* Sidebar Styling */
-section[data-testid="stSidebar"] { background-color: #FFFFFF; }
-
-/* Tab hover/active styles */
-.stTabs [data-baseweb="tab"] { transition: 0.3s; }
-.stTabs [data-baseweb="tab"]:hover { color: var(--clr-accent) !important; }
-
-/* Badge Row */
-.badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    background: #E0F2FE;
-    color: var(--clr-accent);
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: transform 0.2s;
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+    color: var(--clr-brand-sky) !important;
 }
-.badge:hover { transform: scale(1.05); cursor: default; }
 </style>
 """, unsafe_allow_html=True)
 
-# ... [Keep your existing gauge_svg, _load_json, risk_category, 
-# clinical_interpretation, get_explainer, local_shap_contributions, 
-# and build_pdf_report functions here] ...
+def gauge_svg(prob_percent: float, color_hex: str) -> str:
+    """Signature component: arc gauge framework rendering absolute probability values."""
+    radius = 70
+    circumference = np.pi * radius
+    offset = circumference * (1 - prob_percent / 100)
+    return f"""
+    <div style="text-align:center;margin:0;padding:0;width:100%;">
+      <svg width="180" height="110" viewBox="0 0 180 110" style="max-width:100%;display:block;margin:0 auto;">
+        <path d="M 20 90 A {radius} {radius} 0 0 1 160 90" fill="none"
+              stroke="var(--clr-border)" stroke-width="14" stroke-linecap="round"/>
+        <path d="M 20 90 A {radius} {radius} 0 0 1 160 90" fill="none"
+              stroke="{color_hex}" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="{circumference}" stroke-dashoffset="{offset}"/>
+        <text x="90" y="80" text-anchor="middle" font-family="IBM Plex Mono, monospace"
+              font-size="26" font-weight="600" fill="{color_hex}">''' + f"{prob_percent:.1f}" + '''%</text>
+        <text x="90" y="100" text-anchor="middle" font-family="Inter, sans-serif"
+              font-size="11" fill="var(--clr-text-muted)" font-weight="500">resistance probability</text>
+      </svg>
+    </div>
+    """
 
-# UI Layout
-st.markdown('<div class="app-header"><h1>🦠 AI-Powered Antibiotic Resistance Predictor</h1></div>', unsafe_allow_html=True)
+def _load_json(path):
+    try:
+        with open(path) as f:
+            return json.load(f)
+    except Exception:
+        return None
 
-# Main Application Logic
-# ... [Use the st.tabs and logic as per your original file] ...
+metrics = _load_json("metrics.json")
+model_card = _load_json("model_card.json")
+shap_importance = _load_json("shap_global_importance.json")
+
+if "history" not in st.session_state:
+    st.session_state.history = []
+
+def risk_category(prob_percent: float):
+    if prob_percent < 30:
+        return "Low Risk", "green"
+    elif prob_percent < 60:
+        return "Moderate Risk", "orange"
+    else:
+        return "High Risk", "red"
+
+def clinical_interpretation(organism, antibiotic, prob_percent, alt_probs):
+    label, _ = risk_category(prob_percent)
+    best_alt = min(alt_probs, key=lambda x: x[1])
+    text = (
+        f"The model estimates a **{prob_percent:.1f}%** probability that this "
+        f"**{organism}** isolate is resistant to **{antibiotic}** ({label.lower()}). "
+    )
+    if best_alt[0] != antibiotic and best_alt[1] < prob_percent - 5:
+        text += (
+            f"Among the antibiotics considered, **{best_alt[0]}** shows the lowest "
+            f"predicted resistance probability ({best_alt[1]:.1f}%) for this organism, "
+            "and may warrant discussion as an alternative — pending culture and "
+            "susceptibility confirmation."
+        )
+    else:
+        text += "No clearly lower-risk alternative was identified among the antibiotics considered."
+    return text
+
+@st.cache_resource(show_spinner=False)
+def get_explainer(_model):
+    import shap
+    return shap.TreeExplainer(_model)
+
+def local_shap_contributions(features_df):
+    try:
+        explainer = get_explainer(model)
+        sv = explainer.shap_values(features_df)
+        sv = sv[1] if isinstance(sv, list) else sv
+        sv = np.array(sv).reshape(-1)
+        out = pd.DataFrame({
+            "Feature": features_df.columns,
+            "Value": features_df.iloc[0].values,
+            "SHAP contribution": sv,
+        }).sort_values("SHAP contribution", key=abs, ascending=False)
+        return out
+    except Exception:
+        return None
+
+def build_pdf_report(patient, prob_percent, label, interpretation) -> bytes:
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.pdfgen import canvas
+    import textwrap
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    y = height - 2 * cm
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(2 * cm, y, "AMR Resistance Prediction Report (Research Prototype)")
+    y -= 1 * cm
+    c.setFont("Helvetica", 9)
+    c.drawString(2 * cm, y, f"Generated: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}")
+    y -= 0.8 * cm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, y, "Input Summary")
+    y -= 0.6 * cm
+    c.setFont("Helvetica", 10)
+    for k, v in patient.items():
+        c.drawString(2.2 * cm, y, f"{k}: {v}")
+        y -= 0.5 * cm
+    y -= 0.3 * cm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, y, "Prediction")
+    y -= 0.6 * cm
+    c.setFont("Helvetica", 10)
+    c.drawString(2.2 * cm, y, f"Predicted resistance probability: {prob_percent:.1f}%  ({label})")
+    y -= 0.8 * cm
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2 * cm, y, "Clinical Interpretation")
+    y -= 0.6 * cm
+    c.setFont("Helvetica", 9)
+    for line in textwrap.wrap(interpretation.replace("**", ""), 95):
+        c.drawString(2.2 * cm, y, line)
+        y -= 0.45 * cm
+    y -= 0.8 * cm
+    c.setFont("Helvetica-Oblique", 8)
+    for line in [
+        "DISCLAIMER: This output is generated by a machine learning prototype trained on",
+        "synthetic data for educational and research purposes only. It is NOT a substitute",
+        "for clinical judgement, culture and susceptibility testing, or institutional",
+        "antimicrobial stewardship guidance.",
+    ]:
+        c.drawString(2 * cm, y, line)
+        y -= 0.4 * cm
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf.read()
+
+st.markdown("""
+<div class="app-header">
+  <h1>🦠 AI-Powered Antibiotic Resistance Predictor</h1>
+  <p>Research prototype for antimicrobial stewardship decision support · Educational &amp; research use only</p>
+</div>
+""", unsafe_allow_html=True)
+
+_version = "1.0.0"
+_n = "—"
+st.markdown(f"""
+<div class="badge-row">
+  <span class="badge">🧠 SHAP Explainable AI</span>
+  <span class="badge">📄 Model Card v{_version}</span>
+  <span class="badge">🧪 Synthetic Data (n={_n})</span>
+  <span class="badge">📊 Performance Telemetry Active</span>
+  <span class="badge">⚕️ Research Blueprint</span>
+</div>
+""", unsafe_allow_html=True)
+
+with st.expander("ℹ️ About this tool, its data, and its limitations", expanded=False):
+    st.markdown(
+        "This tool predicts the probability of antimicrobial resistance from "
+        "patient/specimen/organism/antibiotic features, trained on a synthetic "
+        "antibiogram-style dataset. **Not for clinical use.**"
+    )
+
+with st.sidebar:
+    st.header("Patient & Sample Information") 
+    if st.button("🎲 Load Random Sample Patient", use_container_width=True):
+        rng = np.random.default_rng()
+        st.session_state["_sample"] = {
+            "organism": rng.choice(ORGANISMS),
+            "antibiotic": rng.choice(ANTIBIOTICS),
+            "specimen": rng.choice(SPECIMENS),
+            "gender": rng.choice(GENDERS),
+            "age": int(rng.integers(1, 91)),
+        }
+    sample = st.session_state.get("_sample", {})
+    organism = st.selectbox("Organism (bacteria)", ORGANISMS,
+                            index=ORGANISMS.index(sample["organism"]) if sample.get("organism") in ORGANISMS else 0)
+    antibiotic = st.selectbox("Antibiotic", ANTIBIOTICS,
+                               index=ANTIBIOTICS.index(sample["antibiotic"]) if sample.get("antibiotic") in ANTIBIOTICS else 0)
+    specimen = st.selectbox("Specimen type", SPECIMENS,
+                             index=SPECIMENS.index(sample["specimen"]) if sample.get("specimen") in SPECIMENS else 0)
+    gender = st.selectbox("Gender", GENDERS,
+                           index=GENDERS.index(sample["gender"]) if sample.get("gender") in GENDERS else 0)
+    age = st.number_input("Age (years)", min_value=1, max_value=90, value=int(sample.get("age", 30)))
+
+    predict_clicked = st.button("Predict Resistance", type="primary", use_container_width=True) 
+    st.markdown("---")
+    st.caption(
+        "Educational/research prototype only. Not for clinical use. "
+        "See 'About & Model Card' tab for full disclaimers."
+    )
+
+tab_predict, tab_perf, tab_shap, tab_batch, tab_history, tab_about = st.tabs(
+    ["🔬 Predict", "📊 Model Performance", "🧠 Explainability", "📁 Batch Prediction", "🕒 History", "📖 About & Model Card"]
+)
+
+with tab_predict:
+    if predict_clicked:
+        features = prepare_features(organism, antibiotic, specimen, gender, age)
+        proba = model.predict_proba(features)[0]
+        resistant_prob = proba[1]
+        prob_percent = resistant_prob * 100
+        label, color = risk_category(prob_percent)
+        color_hex = {"green": "var(--clr-status-success)", "orange": "var(--clr-status-warning)", "red": "var(--clr-status-error)"}[color]
+        risk_class = {"green": "risk-low", "orange": "risk-moderate", "red": "risk-high"}[color]      
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.subheader("Prediction Result")
+            st.markdown(gauge_svg(prob_percent, color_hex), unsafe_allow_html=True)
+            st.markdown(
+                f'<div style="text-align:center;margin-top:0.6rem;">'
+                f'<span class="risk-chip {risk_class}">{label}</span></div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown('</div>', unsafe_allow_html=True)
+        with col2:
+            st.markdown('<div class="card">', unsafe_allow_html=True)
+            st.subheader("Resistance Context Matrix")
+            probs = []
+            for ab in ANTIBIOTICS:
+                feat = prepare_features(organism, ab, specimen, gender, age)
+                p = model.predict_proba(feat)[0][1] * 100
+                probs.append((ab, p))
+            chart_data = pd.DataFrame(probs, columns=["Antibiotic", "Resistance (%)"]).set_index("Antibiotic")
+            st.bar_chart(chart_data, color="var(--clr-brand-sky)")
+            st.markdown('</div>', unsafe_allow_html=True)          
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("🩺 Clinical Interpretation Summary")
+        interpretation = clinical_interpretation(organism, antibiotic, prob_percent, probs)
+        st.info(interpretation)
+        st.markdown('</div>', unsafe_allow_html=True)    
+        st.markdown('<div class="card">', unsafe_allow_html=True)
+        st.subheader("🧠 Local SHAP Contributions Framework")
+        contrib = local_shap_contributions(features)
+        if contrib is not None:
+            st.dataframe(
+                contrib.style.format({"SHAP contribution": "{:+.3f}"}),
+                use_container_width=True, hide_index=True,
+            )
+        else:
+            st.caption("SHAP explanation mapping unavailable.")
+        st.markdown('</div>', unsafe_allow_html=True)     
+        st.session_state.history.append({
+            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "age": age, "gender": gender, "specimen": specimen,
+            "organism": organism, "antibiotic": antibiotic,
+            "resistance_probability_%": round(prob_percent, 1),
+            "risk_category": label,
+        })        
+        st.subheader("📥 Export Pipeline Data")
+        patient = {"Age": age, "Gender": gender, "Specimen": specimen,
+                   "Organism": organism, "Antibiotic": antibiotic}
+        csv_bytes = pd.DataFrame([{**patient, "Resistance_Probability_%": round(prob_percent, 1),
+                                   "Risk_Category": label}]).to_csv(index=False).encode()      
+        colA, colB = st.columns(2)
+        with colA:
+            st.download_button("⬇️ Download as CSV Matrix", csv_bytes, file_name="amr_prediction.csv", mime="text/csv")
+        with colB:
+            try:
+                pdf_bytes = build_pdf_report(patient, prob_percent, label, interpretation)
+                st.download_button("⬇️ Download PDF Report Artifact", pdf_bytes, file_name="amr_prediction_report.pdf", mime="application/pdf")
+            except Exception as e:
+                st.caption(f"PDF engine failed context initialization: {e}")
+    else:
+        st.info("Set patient/sample details in the sidebar and click **Predict Resistance** to begin.")
+
+with tab_perf:
+    st.subheader("Held-out Test Performance Configuration")
+    if metrics:
+        c1, c2, c3, c4, c5 = st.columns(5)
+        c1.metric("Accuracy Matrix", f"{metrics['accuracy']*100:.1f}%")
+        c2.metric("ROC-AUC Score", f"{metrics['roc_auc']:.3f}")
+        c3.metric("PR-AUC Score", f"{metrics['pr_auc']:.3f}")
+        c4.metric("F1-Score Metrics", f"{metrics['f1_score']:.3f}")
+        if "brier_score" in metrics:
+            c5.metric("Brier Score", f"{metrics['brier_score']:.3f}")      
+        st.markdown("---")        
+        colA, colB, colC = st.columns(3)
+        for col, img, cap in [
+            (colA, "roc_curve.png", "ROC Curve Map"),
+            (colB, "pr_curve.png", "Precision–Recall Curve Analysis"),
+            (colC, "confusion_matrix.png", "Confusion Matrix Breakdown"),
+        ]:
+            try:
+                col.image(img, caption=cap, use_container_width=True)
+            except Exception:
+                col.caption(f"{cap} asset missing from disk volume paths.")
+    else:
+        st.warning("Telemetry descriptor structure metrics.json not located.")
+
+with tab_shap:
+    st.subheader("Global Explainer Feature Profiles (SHAP Engine)")
+    colA, colB = st.columns(2)
+    try:
+        colA.image("shap_bar.png", caption="Mean |SHAP value| Performance Graph", use_container_width=True)
+    except Exception:
+        colA.caption("shap_bar.png visualization target absent from disk path storage.")
+    try:
+        colB.image("shap_summary.png", caption="SHAP Positional Summary Distribution Diagram", use_container_width=True)
+    except Exception:
+        colB.caption("shap_summary.png visualization target absent from disk path storage.")
+
+with tab_batch:
+    st.subheader("Cohort Optimization Bulk Operations Block")
+    st.download_button(
+        "⬇️ Download Core CSV Template",
+        pd.DataFrame([{"age": 45, "gender": "F", "specimen": "urine", "organism": "E. coli", "antibiotic": "Ciprofloxacin"}]).to_csv(index=False).encode(),
+        file_name="batch_template.csv", mime="text/csv",
+    )
+    uploaded = st.file_uploader("Upload Target Batch Processing Pipeline Records (CSV)", type=["csv"])
+    if uploaded is not None:
+        try:
+            batch_df = pd.read_csv(uploaded)
+            results = []
+            for _, row in batch_df.iterrows():
+                feat = prepare_features(row["organism"], row["antibiotic"], row["specimen"], row["gender"], row["age"])
+                p = model.predict_proba(feat)[0][1] * 100
+                label, _ = risk_category(p)
+                results.append({**row.to_dict(), "resistance_probability_%": round(p, 1), "risk_category": label})
+            st.dataframe(pd.DataFrame(results), use_container_width=True, hide_index=True)
+        except Exception as e:
+            st.error(f"Failed parsing uploaded batch context layers: {e}")
+
+with tab_history:
+    st.subheader("Session Tracking Logs")
+    if st.session_state.history:
+        st.dataframe(pd.DataFrame(st.session_state.history), use_container_width=True, hide_index=True)
+    else:
+        st.info("No query tracking sequences logged within this context instance loop yet.")
+
+with tab_about:
+    st.subheader("Model Card Specification Ledger")
+    if model_card:
+        st.json(model_card)
+    else:
+        st.markdown("No complete model card architecture profile template available on system paths.")
 # Note: Wrap your content inside div class="card" to apply the hover effects.
