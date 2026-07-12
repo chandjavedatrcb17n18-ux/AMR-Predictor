@@ -306,7 +306,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 _version = model_card.get("version", "1.0.0") if model_card else "1.0.0"
-_n = model_card["training_data"]["n_samples"] if model_card else "—"
+_n = model_card["training_data"]["n_samples"] if model_card and "training_data" in model_card and "n_samples" in model_card["training_data"] else "—"
 st.markdown(f"""
 <div class="badge-row">
   <span class="badge">🧠 SHAP Explainable AI</span>
